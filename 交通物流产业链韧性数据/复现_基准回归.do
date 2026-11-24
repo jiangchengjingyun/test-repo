@@ -209,4 +209,23 @@ xtreg RES DEL Size Lev Growth Roa i.year if year >= 2020, fe vce(cluster id)
 estimates store t2
 estimates table t1 t2, b(%9.4f) se(%9.4f) stats(N)
 
+*------------------------------------------------------------------------------
+* 数据核验后的样本敏感性检验
+*------------------------------------------------------------------------------
+count
+count if data_valid == 0
+count if transport_core == 1
+count if xcheck_flag == 1
+
+* (1) 剔除实体/代码错配（601313 三六零、600087 退市长油）
+xtreg RES DEL Size Lev Growth Roa i.year if data_valid == 1, fe vce(cluster id)
+estimates store v1
+* (2) 仅保留证监会口径的交通运输主业企业
+xtreg RES DEL Size Lev Growth Roa i.year if data_valid == 1 & transport_core == 1, fe vce(cluster id)
+estimates store v2
+* (3) 在(1)基础上再剔除跨源差异较大的企业—年度
+xtreg RES DEL Size Lev Growth Roa i.year if data_valid == 1 & xcheck_flag == 0, fe vce(cluster id)
+estimates store v3
+estimates table v1 v2 v3, b(%9.4f) se(%9.4f) stats(N)
+
 display "全部完成"
